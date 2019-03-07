@@ -41,6 +41,24 @@ python main.py --train False --model_path model_path used at training phase     
 - For TD-SV, I used the first audio file of each speaker which says "Call Stella". Each training and test data, I added random noise which is extracted from noise added VTCK dataset. 
 - For TD-SI, I used random selected utterances from each speaker. Blank of raw audio files are trimmed and then slicing is performed.  
 
+### Pre-traindd Model
+Pre-trained Model on the data Voxceleb 1 & Voxceleb 2 https://github.com/Honghe/Speaker_Verification/releases/tag/v0.0.1
+With configuration.py by following the Google paper:
+```
+# Data Preprocess Arguments
+data_arg = parser.add_argument_group('Data')
+data_arg.add_argument('--sr', type=int, default=16000, help="sampling rate")
+# Model Parameters
+model_arg = parser.add_argument_group('Model')
+model_arg.add_argument('--hidden', type=int, default=768, help="hidden state dimension of lstm")
+model_arg.add_argument('--proj', type=int, default=256, help="projection dimension of lstm")
+# Training Parameters
+train_arg = parser.add_argument_group('Training')
+train_arg.add_argument('--N', type=int, default=48, help="number of speakers of batch")
+train_arg.add_argument('--M', type=int, default=10, help="number of utterances per speaker")
+```
+Performance:
+trained loss is 120.
 
 ### Results
 I trained the model with my notebook cpu. Model hyperpameters are followed by the paper :3-lstm layers with 128 hidden nodes and 64 projection nodes (Total 210434 variables), 0.01 lr sgd with 1/2 decay, l2 norm clipping with 3. To finish training and test in time, I use smaller batch (4 speakers x 5 utterances) than the paper. I used about 85% of dataset for training and else for test. Only softmax loss is used, but I made contrast loss code too. In my cpu, it takes less than 1s for 40 utterances embedding.
