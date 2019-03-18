@@ -104,6 +104,7 @@ Tested on CVTK with `--N=80 --M=5`
 
 EER : 0.035 (thres:0.580, FAR:0.036, FRR:0.035)
 ```
+Pre-trained Model on the data Voxceleb 1 & Voxceleb 2 with Loss 60. https://github.com/Honghe/Speaker_Verification/releases/tag/v0.0.2
 
 ### Results
 I trained the model with my notebook cpu. Model hyperpameters are followed by the paper :3-lstm layers with 128 hidden nodes and 64 projection nodes (Total 210434 variables), 0.01 lr sgd with 1/2 decay, l2 norm clipping with 3. To finish training and test in time, I use smaller batch (4 speakers x 5 utterances) than the paper. I used about 85% of dataset for training and else for test. Only softmax loss is used, but I made contrast loss code too. In my cpu, it takes less than 1s for 40 utterances embedding.
