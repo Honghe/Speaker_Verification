@@ -1,3 +1,5 @@
+import time
+
 import tensorflow as tf
 import numpy as np
 import os
@@ -8,6 +10,15 @@ from configuration import get_config
 
 config = get_config()
 
+def timing(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        print('%r  %2.2f ms' % (method.__name__, (te - ts) * 1000))
+        return result
+
+    return timed
 
 def keyword_spot(spec):
     """ Keyword detection for data preprocess
@@ -16,7 +27,7 @@ def keyword_spot(spec):
     """
     return spec[:, -config.tdsv_frame:]
 
-
+@timing
 def random_batch(speaker_num=config.N, utter_num=config.M, shuffle=True, noise_filenum=None, utter_start=0):
     """ Generate 1 batch.
         For TD-SV, noise is added to each utterance.
