@@ -4,7 +4,6 @@ import librosa
 import numpy as np
 
 from configuration import get_config
-from utils import keyword_spot
 
 config = get_config()  # get arguments from parser
 
@@ -59,24 +58,52 @@ def save_spectrogram_tdsv():
     os.makedirs(config.train_path, exist_ok=True)  # make folder to save train file
     os.makedirs(config.test_path, exist_ok=True)  # make folder to save test file
 
+    for utter_id in range(1, 10):
+        utter_id_str = '{:03d}'.format(utter_id)
+        save_spectrogram_tdsv_by_utter_id(utter_id_str)
+
+
+def padding_array(utterances_spec):
+    # Ref: https://docs.scipy.org/doc/numpy/reference/generated/numpy.pad.html
+    max_frame_len = max([x.shape[1] for x in utterances_spec])
+    output = []
+    for i, v in enumerate(utterances_spec):  # v is 2d array
+        v_new = np.zeros((v.shape[0], max_frame_len), np.complex64)
+        for j, y in enumerate(v):
+            v_new[j][:len(y)] = y
+        output.append(v_new)
+    return output
+
+
+def save_spectrogram_tdsv_by_utter_id(utter_id):
     utterances_spec = []
     for folder in os.listdir(audio_path):
-        utter_path = os.path.join(audio_path, folder, sorted(os.listdir(os.path.join(audio_path, folder)))[0])
-        if os.path.splitext(os.path.basename(utter_path))[0][-3:] != '001':  # if the text utterance doesn't exist pass
-            print(os.path.basename(utter_path)[:4], "001 file doesn't exist")
-            continue
+        hit = False
+        for utter_file in sorted(os.listdir(os.path.join(audio_path, folder))):
+            utter_path = os.path.join(audio_path, folder, utter_file)
+            if os.path.splitext(os.path.basename(utter_path))[0][
+               -3:] != utter_id:  # if the text utterance doesn't exist pass
+                continue
+            else:
+                hit = True
+            utter, sr = librosa.core.load(utter_path, config.sr)  # load the utterance audio
+            utter_trim, index = librosa.effects.trim(utter, top_db=14)  # trim the beginning and end blank
+            if utter_trim.shape[0] / sr <= config.hop * (config.tdsv_frame + 2):  # if trimmed file is too short, then pass
+                print(os.path.basename(utter_path), "voice trim fail")
+                continue
 
-        utter, sr = librosa.core.load(utter_path, config.sr)  # load the utterance audio
-        utter_trim, index = librosa.effects.trim(utter, top_db=14)  # trim the beginning and end blank
-        if utter_trim.shape[0] / sr <= config.hop * (config.tdsv_frame + 2):  # if trimmed file is too short, then pass
-            print(os.path.basename(utter_path), "voice trim fail")
-            continue
+            S = librosa.core.stft(y=utter_trim, n_fft=config.nfft,
+                                  win_length=int(config.window * sr), hop_length=int(config.hop * sr))  # perform STFT
+            # S = keyword_spot(S)  # keyword spot (for now, just slice last 80 frames which contains "Call Stella")
+            utterances_spec.append(S)  # make spectrograms list
+        if not hit:
+            print(folder, "{} file doesn't exist".format(utter_id))
 
-        S = librosa.core.stft(y=utter_trim, n_fft=config.nfft,
-                              win_length=int(config.window * sr), hop_length=int(config.hop * sr))  # perform STFT
-        S = keyword_spot(S)  # keyword spot (for now, just slice last 80 frames which contains "Call Stella")
-        utterances_spec.append(S)  # make spectrograms list
+    if len(utterances_spec) == 0:
+        print('{} has no audio'.format(utter_id))
+        return
 
+    utterances_spec = padding_array(utterances_spec)
     utterances_spec = np.array(utterances_spec)  # list to numpy array. complex64
     np.random.shuffle(utterances_spec)  # shuffle spectrogram (by person)
     total_num = utterances_spec.shape[0]
@@ -84,8 +111,11 @@ def save_spectrogram_tdsv():
     print("selection is end")
     print("total utterances number : %d" % total_num, ", shape : ", utterances_spec.shape)
     print("train : %d, test : %d" % (train_num, total_num - train_num))
-    np.save(os.path.join(config.train_path, "train.npy"), utterances_spec[:train_num])  # save spectrogram as numpy file
-    np.save(os.path.join(config.test_path, "test.npy"), utterances_spec[train_num:])
+    os.makedirs(os.path.join(config.train_path, utter_id), exist_ok=True)
+    os.makedirs(os.path.join(config.test_path, utter_id), exist_ok=True)
+    np.save(os.path.join(config.train_path, utter_id, "train.npy"),
+            utterances_spec[:train_num])  # save spectrogram as numpy file
+    np.save(os.path.join(config.test_path, utter_id, "test.npy"), utterances_spec[train_num:])
 
 
 def save_spectrogram_tisv():

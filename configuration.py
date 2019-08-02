@@ -52,7 +52,7 @@ train_arg.add_argument('--optim', type=str.lower, default='sgd', help="optimizer
 train_arg.add_argument('--lr', type=float, default=1e-2, help="learning rate")
 train_arg.add_argument('--beta1', type=float, default=0.5, help="beta1")
 train_arg.add_argument('--beta2', type=float, default=0.9, help="beta2")
-train_arg.add_argument('--iteration', type=int, default=100000, help="max iteration")
+train_arg.add_argument('--iteration', type=int, default=1000000, help="max iteration")
 train_arg.add_argument('--comment', type=str, default='', help="any comment")
 
 config = get_config()
