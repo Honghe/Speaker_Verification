@@ -68,6 +68,19 @@ def train(path):
     tfconfig.gpu_options.allow_growth = True
     with tf.Session(config=tfconfig) as sess:
         tf.global_variables_initializer().run()
+
+        # load model
+        print("model path :", path)
+        ckpt = tf.train.latest_checkpoint(checkpoint_dir=os.path.join(path, "Check_Point"))
+        loaded = 0
+        if ckpt:
+            print("ckpt file is loaded !", ckpt)
+            loaded = 1
+            saver.restore(sess, ckpt)  # restore variables from selected ckpt file
+
+        if loaded == 0:
+            print("ckpt file does not exist! Check config.model_num or config.model_path.")
+
         sess.run(iterator.initializer)
         os.makedirs(os.path.join(path, "Check_Point"), exist_ok=True)  # make folder to save model
         os.makedirs(os.path.join(path, "logs"), exist_ok=True)  # make folder to save log

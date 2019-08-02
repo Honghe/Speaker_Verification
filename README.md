@@ -67,7 +67,14 @@ Random selected utterances are used. I test the model after 60000 iteration. Equ
 ```
 
 ```
-
+## Bug
+when --N > 10
+```
+optimizers/dependency_optimizer.cc:697] Iteration = 1, topological sort failed with message: The graph couldn't be sorted in topological order.
+optimizers/meta_optimizer.cc:502] layout failed: Invalid argument: The graph couldn't be sorted in topological order.
+optimizers/meta_optimizer.cc:502] remapper failed: Invalid argument: The graph couldn't be sorted in topological order.
+optimizers/meta_optimizer.cc:502] arithmetic_optimizer failed: Invalid argument: The graph couldn't be sorted in topological order.
+```
 
 
 

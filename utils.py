@@ -48,10 +48,13 @@ def random_batch_generate(speaker_num=config.N, utter_num=config.M, shuffle=True
 
     # TD-SV
     if config.tdsv:
-        np_file = os.listdir(path)[0]
-        path = os.path.join(path, np_file)  # path of numpy file
-        utters = np.load(path)              # load text specific utterance spectrogram
         while True:
+            utter_id = random.choice(os.listdir(path))
+            # print('load utter_id {}'.format(utter_id))
+            utter_id_path = os.path.join(path, utter_id)
+            np_file = os.listdir(utter_id_path)[0]
+            utters_path = os.path.join(utter_id_path, np_file)  # path of numpy file
+            utters = np.load(utters_path)  # load text specific utterance spectrogram
             t1 = time.time()
             if shuffle:
                 np.random.shuffle(utters)       # shuffle for random sampling
@@ -65,7 +68,9 @@ def random_batch_generate(speaker_num=config.N, utter_num=config.M, shuffle=True
                 noise_filenum = np.random.randint(0, config.noise_filenum)                    # random selection of noise
             noise = np.load(os.path.join(config.noise_path, "noise_%d.npy"%noise_filenum))  # load noise
 
-            utter_batch += noise[:,:utter_batch.shape[1]]   # add noise to utterance
+            # extend noise to fit utter_batch.shape[1] which length is dynamic
+
+            # utter_batch += noise[:,:utter_batch.shape[1]]   # add noise to utterance
 
             utter_batch = np.abs(utter_batch) ** 2
             mel_basis = librosa.filters.mel(sr=config.sr, n_fft=config.nfft, n_mels=40)
