@@ -69,8 +69,12 @@ def random_batch_generate(speaker_num=config.N, utter_num=config.M, shuffle=True
             noise = np.load(os.path.join(config.noise_path, "noise_%d.npy"%noise_filenum))  # load noise
 
             # extend noise to fit utter_batch.shape[1] which length is dynamic
-
-            # utter_batch += noise[:,:utter_batch.shape[1]]   # add noise to utterance
+            noise_base = noise.copy()
+            # print('noise_base shape: {}'.format(noise_base.shape))
+            for i in range(utter_batch.shape[1] // noise.shape[1]):
+                noise = np.concatenate((noise, noise_base), axis=1)
+            # print('noise shape {}'.format(noise.shape))
+            utter_batch += noise[:,:utter_batch.shape[1]]   # add noise to utterance
 
             utter_batch = np.abs(utter_batch) ** 2
             mel_basis = librosa.filters.mel(sr=config.sr, n_fft=config.nfft, n_mels=40)
